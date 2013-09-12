@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+	<title>Maven to Gradle Converter</title>
+	 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+    	body { background-color: #eee; font: helvetica; }
+    	#container { width: 900px; background-color: #fff; margin: 30px auto; padding: 30px; border-radius: 5px; box-shadow: 5px; }
+    	#out { margin-top: 10px; }
+    	.footer { margin-top: 20px;}
+    </style>
+</head>
+
+<body>
+
+	<div id="container">
+
+		<h1>Maven to Gradle Dependency Converter</h1>
+		<div class="subtitle">Note: this is provided as-is. Currently only parses groupId, artifactId and version. Scope is ignored. If you are
+			using a variable for version, it will keep that, but you will still need to define the variable in your build.gradle file</div>
+		<hr/>
+		<form class="form-inline" role="form">
+
+				<div class="form-group hide">
+				    <label class="sr-only" for="nameInput">Variable declarations (if any..)</label>
+				    <input type="text" id="vars" class="form-control" id="nameInput" placeholder="Variables" />
+			  </div>
+
+			  <div class="form-group">
+			    <label class="sr-only" for="nameInput">Paste your POM dependencies below &ndash; can be full section or single dependencies</small></label>
+			    <textarea id="maven" class="form-control" rows="6"></textarea>
+			  </div>
+			  
+			  <button id="convert" type="button" class="btn btn-default">Convert to Gradle</button>
+
+		</form>
+
+			<div id="out"> </div>
+
+		<div class="footer">
+			If you have suggestions or would like to contribute, <a href="http://codetutr.com/about">Contact Me</a>.
+		</div>
+	</div>
+	
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			var outDepList = [];
+			$('#convert').click(function() {
+
+				deps = parseDependencies(vars);
+
+				$('#out').html('<textarea class="form-control" rows="6">' + deps.join('\r\n') + '</textarea>');
+				
+			});
+			
+		});
+
+		function parseDependencies() {
+
+			groupIdRegex = /<groupId>(.+)<\/groupId>/;
+			artifactIdRegex = /<artifactId>(.+)<\/artifactId>/;
+			versionRegex = /<version>(.+)<\/version>/;
+
+			outDepList = [];
+			depList = $('#maven').val().split('<dependency>');
+			for(var i = 0; i < depList.length; i++) {
+				dep = depList[i];
+				group = groupIdRegex.exec(dep);
+				artifact = artifactIdRegex.exec(dep);
+				version = versionRegex.exec(dep);
+
+				if(version != null && version.length > 1) {
+					version = version[1];
+					if(version.indexOf("${") !== -1) {
+						version = "$" + /\$\{(.*)\}/.exec(version)[1];
+
+					}	
+				}
+
+				if(group !== null && artifact !== null && version !== null) {
+					outDepList.push("compile \"" + group[1] + ':' + artifact[1] + ':' + version + "\"");
+
+				}
+			}
+
+			return outDepList;
+
+		}
+
+
+	</script>
+
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-38645896-2', 'codetutr.com');
+	  ga('send', 'pageview');
+
+	</script>
+</body>
+</html>
