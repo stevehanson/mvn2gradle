@@ -20,6 +20,8 @@
 		<div class="subtitle">Note: this is provided as-is. Currently only parses groupId, artifactId and version. Scope is ignored. If you are
 			using a variable for version, it will keep that, but you will still need to define the variable in your build.gradle file</div>
 		<hr/>
+
+		<div id="error"> </div>
 		<form class="form-inline" role="form">
 
 				<div class="form-group hide">
@@ -51,7 +53,8 @@
 
 				deps = parseDependencies(vars);
 
-				$('#out').html('<textarea class="form-control" rows="6">' + deps.join('\r\n') + '</textarea>');
+				if(deps && deps.length > 0)
+					$('#out').html('<textarea class="form-control" rows="6">' + deps.join('\r\n') + '</textarea>');
 				
 			});
 			
@@ -65,6 +68,10 @@
 
 			outDepList = [];
 			depList = $('#maven').val().split('<dependency>');
+			if(depList.length == 1) {
+				$('#error').html('<div class="alert alert-danger">Nothing to convert. Please include at least one &lt;dependency></div>');
+				return;
+			}
 			for(var i = 0; i < depList.length; i++) {
 				dep = depList[i];
 				group = groupIdRegex.exec(dep);
